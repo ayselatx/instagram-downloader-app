@@ -10,8 +10,8 @@ from datetime import datetime
 import time
 
 # --- CONFIG ---
-st.set_page_config(page_title="Instagram Downloader Pro", page_icon="📸")
-st.title("📸 Instagram Downloader Pro")
+st.set_page_config(page_title="Instagram Downloader", page_icon="📸")
+st.title("📸 Instagram Downloader")
 
 HISTORY_FILE = "history.json"
 
@@ -97,11 +97,11 @@ def zip_all(folder):
 # --- UI ---
 url = st.text_input("🔗 Lien Instagram")
 
-if st.button("🚀 Télécharger"):
+if st.button("🚀 Rechercher"):
     if not url:
         st.warning("Veuillez entrer une URL.")
     else:
-        with st.spinner("Téléchargement en cours..."):
+        with st.spinner("Recherche en cours..."):
             folder, error = download_post(url)
 
         if error:
