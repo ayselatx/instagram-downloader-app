@@ -7,11 +7,12 @@ import zipfile
 from PIL import Image
 import json
 from datetime import datetime
+import time
 
 # --- CONFIG UI ---
-st.set_page_config(page_title="Instagram Downloader Pro", page_icon="📸")
+st.set_page_config(page_title="Instagram Downloader", page_icon="📸")
 
-st.title("📸 Instagram Downloader Pro")
+st.title("📸 Instagram Downloader")
 
 # --- HISTORY ---
 HISTORY_FILE = "history.json"
@@ -22,11 +23,10 @@ def save_history(url):
         "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
 
+    data = []
     if os.path.exists(HISTORY_FILE):
         with open(HISTORY_FILE, "r") as f:
             data = json.load(f)
-    else:
-        data = []
 
     data.append(entry)
 
@@ -59,18 +59,22 @@ def download_post(url):
     temp_dir = tempfile.mkdtemp()
 
     try:
+        time.sleep(2)  # 🔥 anti rate-limit
+
         post = instaloader.Post.from_shortcode(L.context, shortcode)
 
-        # CARROUSEL
         if post.typename == "GraphSidecar":
             for i, node in enumerate(post.get_sidecar_nodes()):
+                time.sleep(1)
+
                 if node.is_video:
                     L.download_pic(os.path.join(temp_dir, f"video_{i}.mp4"), node.video_url, post.date)
                 else:
                     L.download_pic(os.path.join(temp_dir, f"image_{i}.jpg"), node.display_url, post.date)
 
-        # SINGLE
         else:
+            time.sleep(1)
+
             if post.is_video:
                 L.download_pic(os.path.join(temp_dir, "video.mp4"), post.video_url, post.date)
             else:
@@ -79,6 +83,8 @@ def download_post(url):
         return temp_dir, None
 
     except Exception as e:
+        if "401" in str(e):
+            return None, "⏳ Instagram bloque temporairement. Réessaie dans quelques minutes."
         return None, str(e)
 
 def zip_all(folder):
@@ -119,21 +125,47 @@ if st.button("🚀 Télécharger"):
                 path = os.path.join(folder, file)
 
                 with cols[i % 3]:
+
+                    # 🎥 VIDEO
                     if file.endswith(".mp4"):
                         st.video(path)
-                    else:
-                        st.image(Image.open(path), use_container_width=True)
 
+                        with open(path, "rb") as f:
+                            st.download_button(
+                                "⬇️ Télécharger",
+                                f,
+                                file_name=file,
+                                key=file
+                            )
+
+                    # 🖼️ IMAGE
+                    else:
+                        st.image(path, use_container_width=True)
+
+                        # 🔍 Zoom
+                        with st.expander("🔎 Voir en grand"):
+                            st.image(path)
+
+                        # ⬇️ Download individuel
+                        with open(path, "rb") as f:
+                            st.download_button(
+                                "⬇️ Télécharger",
+                                f,
+                                file_name=file,
+                                key=file
+                            )
+
+            # ZIP global
             zip_path = zip_all(folder)
 
             with open(zip_path, "rb") as f:
                 st.download_button(
-                    "📥 Télécharger tout",
+                    "📥 Télécharger tout (ZIP)",
                     f,
                     file_name="instagram_media.zip"
                 )
 
-# --- HISTORY DISPLAY ---
+# --- HISTORY ---
 st.subheader("📜 Historique")
 
 history = load_history()
