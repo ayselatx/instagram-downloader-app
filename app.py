@@ -46,8 +46,11 @@ def download_post(url):
     L = instaloader.Instaloader(save_metadata=False, download_comments=False, download_videos=True)
 
     # --- LOGIN ---
-    username = st.secrets.get("INSTAGRAM_USERNAME")
-    password = st.secrets.get("INSTAGRAM_PASSWORD")
+    #username = st.secrets.get("INSTAGRAM_USERNAME")
+    #password = st.secrets.get("INSTAGRAM_PASSWORD")
+    
+    username = "hazelcodingtestaccount"
+    password = "fakeaccount123"
     if username and password:
         try:
             L.login(username, password)
